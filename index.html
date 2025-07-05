@@ -324,12 +324,26 @@
         }
 
         // Рендер таблицы лидеров
-        async function renderLeaderboard() {
+      async function renderLeaderboard() {
     const container = document.getElementById('leaderboard-container');
     container.innerHTML = '<p>Загрузка данных...</p>';
     
     try {
         const tg = window.Telegram.WebApp;
+        
+        // Просто показываем кнопку для открытия таблицы
+        container.innerHTML = `
+            <p>Таблица лидеров доступна в основном чате с ботом</p>
+            <button onclick="Telegram.WebApp.openTelegramLink('https://t.me/your_bot_username?start=leaderboard')">
+                Открыть таблицу лидеров
+            </button>
+        `;
+        
+    } catch (error) {
+        container.innerHTML = '<p>Ошибка загрузки. Используйте команду /leaderboard в боте</p>';
+        console.error(error);
+    }
+}
         
         // Отправляем команду боту для получения лидерборда
         await bot.sendCommand("leaderboard");
