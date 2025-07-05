@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Clicker</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        #clicker {
+            width: 200px;
+            height: 200px;
+            margin: 30px auto;
+            background-color: #007bff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Кликер Game</h1>
+    <p>Кликов: <span id="counter">0</span></p>
+    <div id="clicker" onclick="click()">КЛИКАЙ!</div>
+
+    <script>
+        let count = 0;
+        const tg = window.Telegram.WebApp;
+        
+        // Инициализация WebApp
+        tg.expand(); // Раскрываем на весь экран
+        tg.MainButton.setText("Сохранить").show();
+        
+        function click() {
+            count++;
+            document.getElementById("counter").innerText = count;
+        }
+        
+        // Отправка данных в бота при нажатии кнопки
+        tg.MainButton.onClick(() => {
+            tg.sendData(JSON.stringify({clicks: count}));
+        });
+    </script>
+</body>
+</html>
