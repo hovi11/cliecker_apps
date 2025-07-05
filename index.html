@@ -324,24 +324,39 @@
         }
 
         // Рендер таблицы лидеров
-        function renderLeaderboard() {
-            const container = document.getElementById('leaderboard-container');
-            container.innerHTML = '<p>Загрузка данных...</p>';
-            
-            // В реальной реализации здесь будет запрос к серверу
-            // Для примера используем заглушку
-            setTimeout(() => {
-                container.innerHTML = `
-                    <ol>
-                        <li>Игрок 1 - 10,000 урона</li>
-                        <li>Игрок 2 - 8,500 урона</li>
-                        <li>Вы - ${totalDamage} урона</li>
-                        <li>Игрок 4 - 5,200 урона</li>
-                        <li>Игрок 5 - 4,800 урона</li>
-                    </ol>
-                `;
-            }, 500);
+        async function renderLeaderboard() {
+    const container = document.getElementById('leaderboard-container');
+    container.innerHTML = '<p>Загрузка данных...</p>';
+    
+    try {
+        const tg = window.Telegram.WebApp;
+        
+        // Отправляем команду боту для получения лидерборда
+        await bot.sendCommand("leaderboard");
+        
+        // Получаем данные из последнего сообщения бота
+        const lastMessage = await bot.getLastMessage();
+        const data = JSON.parse(lastMessage.text);
+        
+        let html = '<ol>';
+        
+        // Топ-10 игроков
+        data.leaders.forEach((player, index) => {
+            html += `<li>${player[0]} - ${player[1]} урона</li>`;
+        });
+        
+        // Позиция текущего игрока (если не в топ-10)
+        if (data.player && data.player[2] > 10) {
+            html += `...<li>${data.player[0]} (Вы #${data.player[2]}) - ${data.player[1]} урона</li>`;
         }
+        
+        html += '</ol>';
+        container.innerHTML = html;
+    } catch (error) {
+        container.innerHTML = '<p>Ошибка загрузки данных. Попробуйте позже.</p>';
+        console.error(error);
+    }
+}
 
         // Рендер усилений
         function renderBoosts() {
