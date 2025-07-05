@@ -3,50 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tea Clicker</title>
+    <title>War Clicker</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root {
-            --bg-color: #ffffff;
-            --text-color: #000000;
-            --button-color: #007bff;
-            --panel-color: #f0f0f0;
-        }
-
-        body.dark {
-            --bg-color: #1e1e1e;
-            --text-color: #ffffff;
-            --button-color: #1a73e8;
-            --panel-color: #2d2d2d;
-        }
-
         body {
             font-family: Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            text-align: center;
             margin: 0;
-            padding: 10px;
+            padding: 0;
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
             transition: all 0.3s;
-            user-select: none;
         }
-
+        
+        #game-container {
+            padding: 20px;
+            text-align: center;
+        }
+        
         #click-area {
             width: 150px;
             height: 150px;
             margin: 20px auto;
-            background-image: url('https://q-xx.bstatic.com/xdata/images/hotel/max500/215500382.jpg?k=bfab20a750261abbb7ea08a9886b1eb9e0a7795acd9a3aefca9830a56cccf26b&s=100x100');
+            background-image: url('https://via.placeholder.com/150');
             background-size: cover;
             border-radius: 50%;
             cursor: pointer;
-            border: 3px solid var(--button-color);
+            border: 3px solid var(--tg-theme-button-color, #007bff);
         }
-
+        
         .stats {
             margin: 10px 0;
-            font-size: 18px;
+            font-size: 16px;
         }
-
+        
         .nav {
             display: flex;
             justify-content: space-around;
@@ -54,350 +43,281 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background-color: var(--panel-color);
+            background-color: var(--tg-theme-secondary-bg-color, #f0f0f0);
             padding: 10px;
         }
-
+        
         .nav-button {
-            padding: 10px 15px;
-            background-color: var(--button-color);
-            color: white;
+            padding: 8px 12px;
+            background-color: var(--tg-theme-button-color, #007bff);
+            color: var(--tg-theme-button-text-color, #ffffff);
             border: none;
             border-radius: 5px;
             cursor: pointer;
         }
-
+        
         .menu {
             display: none;
             position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: var(--panel-color);
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 60px;
+            background-color: var(--tg-theme-bg-color, #ffffff);
             padding: 20px;
-            border-radius: 10px;
-            width: 80%;
-            max-width: 400px;
+            overflow-y: auto;
             z-index: 100;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
         }
-
-        .upgrade {
-            margin: 10px 0;
-            padding: 10px;
-            background-color: var(--bg-color);
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
+        
         .close-button {
             position: absolute;
-            top: 5px;
+            top: 10px;
             right: 10px;
             cursor: pointer;
-            font-size: 20px;
+        }
+        
+        .upgrade-item {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            border-radius: 5px;
         }
     </style>
 </head>
 <body>
-    <div class="stats">
-        <div>Баланс: <span id="balance">0</span></div>
-        <div>Урон за клик: <span id="damage-per-click">1</span></div>
-        <div>Всего нанесено урона: <span id="total-damage">0</span></div>
+    <div id="game-container">
+        <div class="stats">
+            <div>Баланс: <span id="balance">0</span></div>
+            <div>Урон за клик: <span id="damage-per-click">1</span></div>
+            <div>DPS: <span id="dps">0</span></div>
+        </div>
+        
+        <div id="click-area" onclick="clickDamage()"></div>
     </div>
-
-    <div id="click-area" onclick="clickDamage()"></div>
-
+    
     <div class="nav">
-        <button class="nav-button" onclick="openMenu('shop-menu')">Магазин</button>
-        <button class="nav-button" onclick="openMenu('leaderboard-menu')">Таблица лидеров</button>
-        <button class="nav-button" onclick="openMenu('boost-menu')">Усиления</button>
+        <button class="nav-button" onclick="openMenu('shop')">Магазин</button>
+        <button class="nav-button" onclick="openMenu('leaderboard')">Лидеры</button>
+        <button class="nav-button" onclick="openMenu('boosts')">Усиления</button>
     </div>
-
+    
     <!-- Магазин -->
-    <div id="shop-menu" class="menu">
-        <span class="close-button" onclick="closeMenu('shop-menu')">×</span>
-        <h2>Магазин</h2>
-        <div id="upgrades-container"></div>
+    <div id="shop" class="menu">
+        <h2>Магазин улучшений</h2>
+        <div id="shop-content"></div>
+        <div class="close-button" onclick="closeMenu('shop')">✖ Закрыть</div>
     </div>
-
+    
     <!-- Таблица лидеров -->
-    <div id="leaderboard-menu" class="menu">
-        <span class="close-button" onclick="closeMenu('leaderboard-menu')">×</span>
+    <div id="leaderboard" class="menu">
         <h2>Таблица лидеров</h2>
-        <div id="leaderboard-container"></div>
+        <div id="leaderboard-content"></div>
+        <div class="close-button" onclick="closeMenu('leaderboard')">✖ Закрыть</div>
     </div>
-
+    
     <!-- Усиления -->
-    <div id="boost-menu" class="menu">
-        <span class="close-button" onclick="closeMenu('boost-menu')">×</span>
+    <div id="boosts" class="menu">
         <h2>Усиления</h2>
-        <div id="boosts-container"></div>
+        <div id="boosts-content"></div>
+        <div class="close-button" onclick="closeMenu('boosts')">✖ Закрыть</div>
     </div>
-
+    
     <script>
         // Инициализация Telegram WebApp
         const tg = window.Telegram.WebApp;
         tg.expand();
+        tg.ready();
         
-        // Установка темы
-        if (tg.colorScheme === 'dark') {
-            document.body.classList.add('dark');
-        }
-
-        // Игровые переменные
-        let balance = 0;
-        let totalDamage = 0;
-        let damagePerClick = 1;
-        let upgrades = {
-            damage1: { bought: false, cost: 25, damage: 1 },
-            damage2: { bought: false, cost: 50, damage: 2 },
-            infantry: { bought: false, cost: 400, dps: 5 },
-            artillery: { bought: false, cost: 1000, dps: 10 }
+        // Игровые данные
+        let gameData = {
+            balance: 0,
+            totalDamage: 0,
+            damagePerClick: 1,
+            dps: 0,
+            upgrades: {},
+            boosts: {}
         };
-        let boosts = {
-            emperor: { lastUsed: 0, active: false }
-        };
-        let dps = 0;
-
+        
         // Загрузка данных
         function loadGame() {
             const savedData = localStorage.getItem('warClickerData');
             if (savedData) {
-                const data = JSON.parse(savedData);
-                balance = data.balance || 0;
-                totalDamage = data.totalDamage || 0;
-                damagePerClick = data.damagePerClick || 1;
-                upgrades = data.upgrades || upgrades;
-                boosts = data.boosts || boosts;
-                dps = data.dps || 0;
+                gameData = JSON.parse(savedData);
+                updateUI();
             }
-            updateUI();
-            startDPS();
+            
+            // Запрашиваем данные у бота
+            tg.sendData(JSON.stringify({action: "load"}));
         }
-
+        
         // Сохранение данных
         function saveGame() {
-            const gameData = {
-                balance,
-                totalDamage,
-                damagePerClick,
-                upgrades,
-                boosts,
-                dps
-            };
             localStorage.setItem('warClickerData', JSON.stringify(gameData));
             tg.sendData(JSON.stringify(gameData));
         }
-
+        
+        // Обновление интерфейса
+        function updateUI() {
+            document.getElementById('balance').textContent = gameData.balance;
+            document.getElementById('damage-per-click').textContent = gameData.damagePerClick;
+            document.getElementById('dps').textContent = gameData.dps;
+        }
+        
         // Клик по цели
         function clickDamage() {
-            const damage = damagePerClick;
-            balance += damage;
-            totalDamage += damage;
+            gameData.balance += gameData.damagePerClick;
+            gameData.totalDamage += gameData.damagePerClick;
             updateUI();
             saveGame();
         }
-
-        // DPS система
+        
+        // Система DPS
         function startDPS() {
-            calculateDPS();
             setInterval(() => {
-                if (dps > 0) {
-                    balance += dps;
-                    totalDamage += dps;
+                if (gameData.dps > 0) {
+                    gameData.balance += gameData.dps;
+                    gameData.totalDamage += gameData.dps;
                     updateUI();
                     saveGame();
                 }
             }, 1000);
         }
-
-        function calculateDPS() {
-            dps = 0;
-            if (upgrades.infantry.bought) dps += upgrades.infantry.dps;
-            if (upgrades.artillery.bought) dps += upgrades.artillery.dps;
-        }
-
-        // Покупка улучшений
-        function buyUpgrade(id) {
-            const upgrade = upgrades[id];
-            if (!upgrade.bought && balance >= upgrade.cost) {
-                balance -= upgrade.cost;
-                upgrade.bought = true;
-                
-                if (id.startsWith('damage')) {
-                    damagePerClick += upgrade.damage;
-                }
-                
-                calculateDPS();
-                updateUI();
-                renderShop();
-                saveGame();
-            }
-        }
-
-        // Активация усиления
-        function activateBoost(id) {
-            const boost = boosts[id];
-            const now = Date.now();
-            
-            if (now - boost.lastUsed >= 24 * 60 * 60 * 1000) {
-                boost.lastUsed = now;
-                boost.active = true;
-                
-                if (id === 'emperor') {
-                    damagePerClick += 2;
-                    updateUI();
-                    setTimeout(() => {
-                        damagePerClick -= 2;
-                        boost.active = false;
-                        updateUI();
-                        renderBoosts();
-                        saveGame();
-                    }, 60000);
-                }
-                
-                renderBoosts();
-                saveGame();
-            }
-        }
-
-        // Обновление интерфейса
-        function updateUI() {
-            document.getElementById('balance').textContent = balance;
-            document.getElementById('damage-per-click').textContent = damagePerClick;
-            document.getElementById('total-damage').textContent = totalDamage;
-        }
-
+        
         // Меню
         function openMenu(menuId) {
             document.getElementById(menuId).style.display = 'block';
-            if (menuId === 'shop-menu') renderShop();
-            if (menuId === 'leaderboard-menu') renderLeaderboard();
-            if (menuId === 'boost-menu') renderBoosts();
+            
+            if (menuId === 'shop') renderShop();
+            if (menuId === 'leaderboard') renderLeaderboard();
+            if (menuId === 'boosts') renderBoosts();
         }
-
+        
         function closeMenu(menuId) {
             document.getElementById(menuId).style.display = 'none';
         }
-
+        
         // Рендер магазина
         function renderShop() {
-            const container = document.getElementById('upgrades-container');
-            container.innerHTML = '';
-            
-            if (!upgrades.damage1.bought) {
-                container.innerHTML += `
-                    <div class="upgrade" onclick="buyUpgrade('damage1')">
-                        <strong>Улучшение урона lvl 1</strong><br>
-                        +1 урон за клик<br>
-                        Цена: 25
-                    </div>
-                `;
-            } else if (!upgrades.damage2.bought) {
-                container.innerHTML += `
-                    <div class="upgrade" onclick="buyUpgrade('damage2')">
-                        <strong>Улучшение урона lvl 2</strong><br>
-                        +2 урона за клик<br>
-                        Цена: 50
-                    </div>
-                `;
-            }
-            
-            if (!upgrades.infantry.bought) {
-                container.innerHTML += `
-                    <div class="upgrade" onclick="buyUpgrade('infantry')">
-                        <strong>Поддержка пехоты</strong><br>
-                        +5 урона в секунду<br>
-                        Цена: 400
-                    </div>
-                `;
-            } else if (!upgrades.artillery.bought) {
-                container.innerHTML += `
-                    <div class="upgrade" onclick="buyUpgrade('artillery')">
-                        <strong>Поддержка артиллерии</strong><br>
-                        +10 урона в секунду<br>
-                        Цена: 1000
-                    </div>
-                `;
-            }
-        }
-
-        // Рендер таблицы лидеров
-      async function renderLeaderboard() {
-    const container = document.getElementById('leaderboard-container');
-    container.innerHTML = '<p>Загрузка данных...</p>';
-    
-    try {
-        const tg = window.Telegram.WebApp;
-        
-        // Просто показываем кнопку для открытия таблицы
-        container.innerHTML = `
-            <p>Таблица лидеров доступна в основном чате с ботом</p>
-            <button onclick="Telegram.WebApp.openTelegramLink('https://t.me/your_bot_username?start=leaderboard')">
-                Открыть таблицу лидеров
-            </button>
-        `;
-        
-    } catch (error) {
-        container.innerHTML = '<p>Ошибка загрузки. Используйте команду /leaderboard в боте</p>';
-        console.error(error);
-    }
-}
-        
-        // Отправляем команду боту для получения лидерборда
-        await bot.sendCommand("leaderboard");
-        
-        // Получаем данные из последнего сообщения бота
-        const lastMessage = await bot.getLastMessage();
-        const data = JSON.parse(lastMessage.text);
-        
-        let html = '<ol>';
-        
-        // Топ-10 игроков
-        data.leaders.forEach((player, index) => {
-            html += `<li>${player[0]} - ${player[1]} урона</li>`;
-        });
-        
-        // Позиция текущего игрока (если не в топ-10)
-        if (data.player && data.player[2] > 10) {
-            html += `...<li>${data.player[0]} (Вы #${data.player[2]}) - ${data.player[1]} урона</li>`;
-        }
-        
-        html += '</ol>';
-        container.innerHTML = html;
-    } catch (error) {
-        container.innerHTML = '<p>Ошибка загрузки данных. Попробуйте позже.</p>';
-        console.error(error);
-    }
-}
-
-        // Рендер усилений
-        function renderBoosts() {
-            const container = document.getElementById('boosts-container');
-            const boost = boosts.emperor;
-            const now = Date.now();
-            const cooldown = 24 * 60 * 60 * 1000;
-            const remaining = Math.max(0, cooldown - (now - boost.lastUsed));
-            const hours = Math.floor(remaining / (60 * 60 * 1000));
-            
+            const container = document.getElementById('shop-content');
             container.innerHTML = `
-                <div class="upgrade" onclick="activateBoost('emperor')" 
-                     style="${boost.active || remaining > 0 ? 'opacity: 0.7;' : ''}">
-                    <strong>За императора!</strong><br>
-                    +2 урона за клик на 1 минуту<br>
-                    ${boost.active ? 'Активно' : 
-                      remaining > 0 ? `Доступно через: ${hours}ч` : 'Готово к использованию'}
+                <div class="upgrade-item" onclick="buyUpgrade('damage1')">
+                    <h3>Улучшение урона lvl 1</h3>
+                    <p>+1 урон за клик</p>
+                    <p>Цена: 25</p>
+                </div>
+                <div class="upgrade-item" onclick="buyUpgrade('infantry')">
+                    <h3>Поддержка пехоты</h3>
+                    <p>+5 урона в секунду</p>
+                    <p>Цена: 400</p>
                 </div>
             `;
         }
-
-        // Автосохранение каждые 5 минут
-        setInterval(saveGame, 5 * 60 * 1000);
-
-        // Инициализация игры
-        tg.ready();
+        
+        // Рендер таблицы лидеров
+        async function renderLeaderboard() {
+            const container = document.getElementById('leaderboard-container');
+            container.innerHTML = '<p>Загрузка данных...</p>';
+    
+            try {
+                const tg = window.Telegram.WebApp;
+        
+        // Просто показываем кнопку для открытия таблицы
+            container.innerHTML = `
+                <p>Таблица лидеров доступна в основном чате с ботом</p>
+                <button onclick="Telegram.WebApp.openTelegramLink('https://t.me/your_bot_username?start=leaderboard')">
+                    Открыть таблицу лидеров
+                </button>
+            `;
+        
+            } catch (error) {
+            container.innerHTML = '<p>Ошибка загрузки. Используйте команду /leaderboard в боте</p>';
+            console.error(error);
+            }
+        }
+        
+        // Рендер усилений
+        function renderBoosts() {
+            const container = document.getElementById('boosts-content');
+            container.innerHTML = `
+                <div class="upgrade-item" onclick="activateBoost('emperor')">
+                    <h3>За императора!</h3>
+                    <p>+2 урона за клик на 1 минуту</p>
+                    <p>Доступно: 1 раз в 24 часа</p>
+                </div>
+            `;
+        }
+        
+        // Покупка улучшений
+        function buyUpgrade(upgradeId) {
+            let cost, success = false;
+            
+            switch(upgradeId) {
+                case 'damage1':
+                    cost = 25;
+                    if (gameData.balance >= cost) {
+                        gameData.balance -= cost;
+                        gameData.damagePerClick += 1;
+                        success = true;
+                    }
+                    break;
+                    
+                case 'infantry':
+                    cost = 400;
+                    if (gameData.balance >= cost) {
+                        gameData.balance -= cost;
+                        gameData.dps += 5;
+                        success = true;
+                    }
+                    break;
+            }
+            
+            if (success) {
+                updateUI();
+                saveGame();
+                renderShop();
+                alert('Улучшение куплено!');
+            } else {
+                alert('Недостаточно средств!');
+            }
+        }
+        
+        // Активация усиления
+        function activateBoost(boostId) {
+            if (boostId === 'emperor') {
+                gameData.damagePerClick += 2;
+                updateUI();
+                saveGame();
+                
+                setTimeout(() => {
+                    gameData.damagePerClick -= 2;
+                    updateUI();
+                    saveGame();
+                }, 60000);
+                
+                alert('Усиление активировано!');
+            }
+        }
+        
+        // Обработчик данных от бота
+        tg.onEvent('webAppDataReceived', (event) => {
+            const data = JSON.parse(event.data);
+            
+            if (data.action === "load") {
+                // Обновляем данные из бота
+                gameData.balance = data.balance || 0;
+                gameData.totalDamage = data.totalDamage || 0;
+                gameData.damagePerClick = data.damagePerClick || 1;
+                gameData.dps = data.dps || 0;
+                gameData.upgrades = data.upgrades || {};
+                gameData.boosts = data.boosts || {};
+                
+                updateUI();
+            }
+        });
+        
+        // Запуск игры
         loadGame();
+        startDPS();
     </script>
 </body>
 </html>
